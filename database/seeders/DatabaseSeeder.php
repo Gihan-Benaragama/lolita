@@ -17,8 +17,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
         User::updateOrCreate(
             ['email' => 'admin@lolita.com'],
             [
@@ -29,10 +27,14 @@ class DatabaseSeeder extends Seeder
         );
         User::where('email', 'admin@lolita.com')->update(['is_admin' => true]);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        User::updateOrCreate(
+            ['email' => 'test@example.com'],
+            [
+                'name' => 'Test User',
+                'password' => 'password',
+                'is_admin' => false,
+            ]
+        );
 
         $bouquets = Category::firstOrCreate(
             ['slug' => 'bouquets'],
