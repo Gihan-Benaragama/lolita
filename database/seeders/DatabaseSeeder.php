@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Category;
+use App\Models\Product;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -17,22 +19,32 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        User::updateOrCreate(
+            ['email' => 'admin@lolita.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('admin123'),
+                'is_admin' => true,
+            ]
+        );
+        User::where('email', 'admin@lolita.com')->update(['is_admin' => true]);
+
         User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
         ]);
 
-        $bouquets = \App\Models\Category::firstOrCreate(
+        $bouquets = Category::firstOrCreate(
             ['slug' => 'bouquets'],
             ['name' => 'Hand-tied Bouquets']
         );
 
-        $bridal = \App\Models\Category::firstOrCreate(
+        $bridal = Category::firstOrCreate(
             ['slug' => 'bridal'],
             ['name' => 'Bridal & Events']
         );
 
-        \App\Models\Product::firstOrCreate(
+        Product::firstOrCreate(
             ['slug' => 'velvet-romance-bouquet'],
             [
                 'category_id' => $bouquets->id,
@@ -46,7 +58,7 @@ class DatabaseSeeder extends Seeder
             ]
         );
 
-        \App\Models\Product::firstOrCreate(
+        Product::firstOrCreate(
             ['slug' => 'blush-meadow-arrangement'],
             [
                 'category_id' => $bouquets->id,
