@@ -21,6 +21,7 @@ ENV SSL_MODE=off
 # These replace the manual deploy script we needed with the old base image.
 ENV AUTORUN_ENABLED=true
 ENV AUTORUN_LARAVEL_MIGRATION=true
+ENV AUTORUN_LARAVEL_SEEDER=true
 ENV AUTORUN_LARAVEL_STORAGE_LINK=true
 
 WORKDIR /var/www/html
