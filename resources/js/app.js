@@ -13,10 +13,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (hero) {
         const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
         tl.from('[data-hero-eyebrow]', { opacity: 0, y: 16, duration: 0.6 })
-          .from('[data-hero-title]', { opacity: 0, y: 24, duration: 0.8 }, '-=0.3')
-          .from('[data-hero-sub]', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
-          .from('[data-hero-cta]', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
-          .from('[data-hero-image]', { opacity: 0, scale: 1.04, duration: 1 }, '-=0.9');
+            .from('[data-hero-title]', { opacity: 0, y: 24, duration: 0.8 }, '-=0.3')
+            .from('[data-hero-sub]', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
+            .from('[data-hero-cta]', { opacity: 0, y: 16, duration: 0.6 }, '-=0.4')
+            .from('[data-hero-image]', { opacity: 0, scale: 1.04, duration: 1 }, '-=0.9');
 
         // subtle parallax on scroll
         gsap.to('[data-hero-image]', {

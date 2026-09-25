@@ -1,0 +1,17 @@
+# No database service here on purpose — SQLite lives inside the app
+# container itself, so there's nothing separate that can expire after
+# 30 days like Render's free Postgres does.
+services:
+  - type: web
+    name: lolita
+    env: docker
+    plan: free
+    envVars:
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: DB_CONNECTION
+        value: sqlite
