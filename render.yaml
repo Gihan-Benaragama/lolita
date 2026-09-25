@@ -1,6 +1,3 @@
-# No database service here on purpose — SQLite lives inside the app
-# container itself, so there's nothing separate that can expire after
-# 30 days like Render's free Postgres does.
 services:
   - type: web
     name: lolita

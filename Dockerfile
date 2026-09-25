@@ -1,25 +1,48 @@
-FROM richarvey/nginx-php-fpm:3.1.6
+# ---- Stage 1: build frontend assets (Tailwind/Vite) with Node ----
+FROM node:20-alpine AS assets
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY resources ./resources
+COPY vite.config.js ./
+COPY public ./public
+RUN npm run build
 
+# ---- Stage 2: the actual PHP app, on a properly maintained, current image ----
+FROM serversideup/php:8.4-fpm-nginx
+
+# This image runs as a non-root user by default; USER root lets us install
+# deps and set permissions before dropping back to the safe default user.
+USER root
+
+ENV NGINX_WEBROOT=/var/www/html/public
+ENV PHP_OPCACHE_ENABLE=1
+ENV SSL_MODE=off
+
+# --- Laravel automations built into this image ---
+# These replace the manual deploy script we needed with the old base image.
+ENV AUTORUN_ENABLED=true
+ENV AUTORUN_LARAVEL_MIGRATION=true
+ENV AUTORUN_LARAVEL_STORAGE_LINK=true
+
+WORKDIR /var/www/html
 COPY . .
 
-ENV WEBROOT=/var/www/html/public
-ENV PHP_ERRORS_STDERR=1
-ENV RUN_SCRIPTS=1
-ENV REAL_IP_HEADER=1
-ENV COMPOSER_ALLOW_SUPERUSER=1
-ENV APP_ENV=production
-ENV APP_DEBUG=false
-ENV LOG_CHANNEL=stderr
-ENV DB_CONNECTION=sqlite
+# Bring in the frontend assets built in Stage 1
+COPY --from=assets /app/public/build ./public/build
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
-RUN npm install && npm run build
 
-RUN mkdir -p /var/www/html/database && touch /var/www/html/database/database.sqlite
-RUN chmod -R 775 /var/www/html/database /var/www/html/storage /var/www/html/bootstrap/cache
-RUN chmod +x /var/www/html/scripts/00-laravel-deploy.sh
+# SQLite lives as a plain file inside the container — make sure it exists
+# and is writable by the user this image actually runs as (www-data).
+RUN mkdir -p database \
+    && touch database/database.sqlite \
+    && chown -R www-data:www-data /var/www/html \
+    && chmod -R 775 database storage bootstrap/cache
 
-# No custom CMD — this image's own entrypoint runs automatically and,
-# because RUN_SCRIPTS=1, it executes scripts/00-laravel-deploy.sh
-# (below) before starting nginx+php-fpm. This is the documented hook
-# for this specific base image, not a guess at its internals.
+# Custom startup hook — runs automatically after the image's own AUTORUN
+# migration step, per this image's documented extension pattern.
+COPY --chmod=755 .docker/entrypoint.sh /etc/entrypoint.d/99-app-init.sh
+RUN docker-php-serversideup-s6-init
+
+EXPOSE 8080
