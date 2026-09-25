@@ -42,7 +42,6 @@ RUN mkdir -p database \
 
 # Custom startup hook — runs automatically after the image's own AUTORUN
 # migration step, per this image's documented extension pattern.
-COPY --chmod=755 .docker/entrypoint.sh /etc/entrypoint.d/99-app-init.sh
-RUN docker-php-serversideup-s6-init
+COPY --chmod=755 docker/entrypoint.sh /etc/entrypoint.d/99-app-init.sh
 
 EXPOSE 8080
