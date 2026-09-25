@@ -10,5 +10,7 @@ services:
         value: production
       - key: APP_DEBUG
         value: false
+      - key: APP_URL
+        value: https://lolita-53ji.onrender.com
       - key: DB_CONNECTION
         value: sqlite
