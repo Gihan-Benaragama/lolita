@@ -56,3 +56,70 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+
+# Lolita — PayHere Payment Integration
+
+Hand-coded against PayHere's official documented Checkout API and webhook
+signature algorithm — no third-party package dependency, so you have full
+visibility into how an order actually gets marked as paid.
+
+## 1. Get your PayHere credentials
+
+1. Sign up at https://www.payhere.lk (a **sandbox** account is separate from
+   live — use sandbox while testing: https://sandbox.payhere.lk)
+2. From your PayHere dashboard: Settings → Domains & Credentials
+3. Copy your **Merchant ID** and **Merchant Secret**
+
+## 2. Add to your .env
+
+```
+PAYHERE_SANDBOX=true
+PAYHERE_MERCHANT_ID=your_merchant_id
+PAYHERE_MERCHANT_SECRET=your_merchant_secret
+PAYHERE_CURRENCY=LKR
+```
+
+Flip `PAYHERE_SANDBOX=false` only once you're ready to accept real payments.
+
+## 3. Copy files into place
+
+| From this zip | Goes to |
+|---|---|
+| `config/payhere.php` | `config/payhere.php` |
+| `app/Services/PayHereService.php` | `app/Services/PayHereService.php` |
+| `app/Http/Controllers/PaymentController.php` | `app/Http/Controllers/PaymentController.php` |
+| `app/Livewire/CheckoutWizard.php` | `app/Livewire/CheckoutWizard.php` (overwrite — replaces the Stripe stub) |
+| `resources/views/checkout/payhere-redirect.blade.php` | `resources/views/checkout/payhere-redirect.blade.php` |
+
+Then manually:
+- Merge `routes/payhere-routes-snippet.php` into your `routes/web.php`
+- Follow `routes/csrf-exemption-note.md` **exactly** — skipping this breaks payment confirmation silently
+- Replace the "STEP 3: PAYMENT" block in `resources/views/livewire/checkout-wizard.blade.php`
+  using `resources/views/livewire/checkout-wizard-step3-replacement.blade.php` as the new content
+
+## 4. Test with PayHere's sandbox test cards
+
+PayHere's sandbox docs list dummy card numbers that simulate a successful
+payment without moving real money. Search "PayHere sandbox test card" on
+their docs site for the current list — it's occasionally updated.
+
+## 5. Test the webhook locally
+
+PayHere's notify webhook needs a public URL, so `localhost` won't work
+directly. Use a tunnel like `ngrok http 8000` while testing, and set that
+ngrok URL as your `APP_URL` temporarily so `route('payhere.notify')`
+generates a reachable address.
+
+## How money actually gets confirmed (read this before going live)
+
+1. Customer finishes the checkout wizard → order created with `status = pending`
+2. Customer is redirected to PayHere's hosted page and pays
+3. PayHere sends the customer's browser back to `payhere.return` — this ONLY
+   improves UX (shows a "processing" message), it does **not** mark anything as paid
+4. Separately, PayHere's own servers POST to `payhere.notify` — this is verified
+   with `PayHereService::verifyNotification()` and is the **only** place `status`
+   flips to `paid` and stock gets decremented
+
+This two-path design (return vs. notify) is PayHere's standard model specifically
+so a customer can't fake a successful payment by just visiting the return URL.

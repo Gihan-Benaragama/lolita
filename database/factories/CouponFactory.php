@@ -10,15 +10,14 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class CouponFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = Coupon::class;
+
     public function definition(): array
     {
         return [
-            //
+            'code' => strtoupper(fake()->unique()->lexify('??????')),
+            'discount_percent' => fake()->numberBetween(5, 50),
+            'is_active' => true,
         ];
     }
 }

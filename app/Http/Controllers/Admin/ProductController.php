@@ -7,38 +7,44 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
     public function index()
     {
         $products = Product::with('category', 'primaryImage')->latest()->paginate(15);
+
         return view('admin.products.index', compact('products'));
     }
 
     public function create()
     {
         $categories = Category::orderBy('name')->get();
+
         return view('admin.products.create', compact('categories'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'           => 'required|string|max:255',
-            'category_id'    => 'required|exists:categories,id',
-            'description'    => 'nullable|string',
-            'price'          => 'required|numeric|min:0',
-            'sale_price'     => 'nullable|numeric|min:0',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'sku'            => 'required|string|unique:products,sku',
-            'is_featured'    => 'boolean',
-            'is_active'      => 'boolean',
-            'images'         => 'nullable|array',
-            'images.*'       => 'image|mimes:jpeg,png,jpg,webp|max:3072',
+            'sku' => 'required|string|unique:products,sku',
+            'is_featured' => 'boolean',
+            'is_active' => 'boolean',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:3072',
         ]);
 
-        $data['slug'] = \Illuminate\Support\Str::slug($data['name']) . '-' . uniqid();
+        $data['slug'] = Str::slug($data['name']).'-'.uniqid();
+        $data['is_featured'] = $request->boolean('is_featured');
+        $data['is_active'] = $request->boolean('is_active');
 
         // Remove images from product data before creating
         $images = $request->file('images', []);
@@ -64,31 +70,35 @@ class ProductController extends Controller
     {
         $product->load('images');
         $categories = Category::orderBy('name')->get();
+
         return view('admin.products.edit', compact('product', 'categories'));
     }
 
     public function update(Request $request, Product $product)
     {
         $data = $request->validate([
-            'name'           => 'required|string|max:255',
-            'category_id'    => 'required|exists:categories,id',
-            'description'    => 'nullable|string',
-            'price'          => 'required|numeric|min:0',
-            'sale_price'     => 'nullable|numeric|min:0',
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'description' => 'nullable|string',
+            'price' => 'required|numeric|min:0',
+            'sale_price' => 'nullable|numeric|min:0',
             'stock_quantity' => 'required|integer|min:0',
-            'sku'            => 'required|string|unique:products,sku,' . $product->id,
-            'is_featured'    => 'boolean',
-            'is_active'      => 'boolean',
-            'images'         => 'nullable|array',
-            'images.*'       => 'image|mimes:jpeg,png,jpg,webp|max:3072',
+            'sku' => 'required|string|unique:products,sku,'.$product->id,
+            'is_featured' => 'boolean',
+            'is_active' => 'boolean',
+            'images' => 'nullable|array',
+            'images.*' => 'image|mimes:jpeg,png,jpg,webp|max:3072',
         ]);
 
         $images = $request->file('images', []);
         unset($data['images']);
 
+        $data['is_featured'] = $request->boolean('is_featured');
+        $data['is_active'] = $request->boolean('is_active');
+
         $product->update($data);
 
-        if (!empty($images)) {
+        if (! empty($images)) {
             foreach ($images as $index => $file) {
                 $path = $file->store('products', 'public');
                 ProductImage::create([
@@ -107,8 +117,8 @@ class ProductController extends Controller
     {
         // Delete image files from storage
         foreach ($product->images as $img) {
-            if ($img->image_path && !str_starts_with($img->image_path, 'http')) {
-                \Illuminate\Support\Facades\Storage::disk('public')->delete($img->image_path);
+            if ($img->image_path && ! str_starts_with($img->image_path, 'http')) {
+                Storage::disk('public')->delete($img->image_path);
             }
         }
 
@@ -118,4 +128,3 @@ class ProductController extends Controller
         return redirect()->route('admin.products.index')->with('success', 'Product deleted successfully.');
     }
 }
-

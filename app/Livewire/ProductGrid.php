@@ -13,7 +13,7 @@ class ProductGrid extends Component
     use WithPagination;
 
     #[Url(as: 'category')]
-    public ?int $categoryId = null;
+    public string|int|null $category = null;
 
     #[Url]
     public string $sort = 'newest';
@@ -26,7 +26,7 @@ class ProductGrid extends Component
 
     public function updated($property)
     {
-        if (in_array($property, ['categoryId', 'sort', 'maxPrice', 'inStockOnly'])) {
+        if (in_array($property, ['category', 'sort', 'maxPrice', 'inStockOnly'])) {
             $this->resetPage();
         }
     }
@@ -35,8 +35,12 @@ class ProductGrid extends Component
     {
         $query = Product::query()->where('is_active', true)->with(['primaryImage', 'category']);
 
-        if ($this->categoryId) {
-            $query->where('category_id', $this->categoryId);
+        if ($this->category) {
+            if (is_numeric($this->category)) {
+                $query->where('category_id', (int) $this->category);
+            } else {
+                $query->whereHas('category', fn ($q) => $q->where('slug', $this->category));
+            }
         }
 
         if ($this->maxPrice) {

@@ -5,10 +5,10 @@
         <div class="flex flex-wrap items-center gap-4">
             <!-- Category Selector -->
             <div class="relative">
-                <select wire:model.live="categoryId" class="appearance-none rounded-full border border-rose/25 bg-ivory/50 px-5 py-2.5 pr-10 text-xs uppercase tracking-wider font-medium text-wine focus:border-wine focus:outline-none focus:ring-1 focus:ring-wine">
+                <select wire:model.live="category" class="appearance-none rounded-full border border-rose/25 bg-ivory/50 px-5 py-2.5 pr-10 text-xs uppercase tracking-wider font-medium text-wine focus:border-wine focus:outline-none focus:ring-1 focus:ring-wine">
                     <option value="">All Categories</option>
-                    @foreach ($categories as $category)
-                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                    @foreach ($categories as $categoryItem)
+                        <option value="{{ $categoryItem->id }}">{{ $categoryItem->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -36,7 +36,7 @@
     </div>
 
     <!-- Shimmer skeleton loading state -->
-    <div wire:loading.flex wire:target="categoryId,sort,maxPrice,inStockOnly" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div wire:loading.flex wire:target="category,sort,maxPrice,inStockOnly" class="hidden grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         @for ($i = 0; $i < 8; $i++)
             <div class="rounded-3xl bg-white p-4 border border-rose/10 shadow-sm animate-pulse h-96">
                 <div class="aspect-[4/5] rounded-2xl bg-rose/10"></div>
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Products Grid -->
-    <div wire:loading.remove wire:target="categoryId,sort,maxPrice,inStockOnly" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div wire:loading.remove wire:target="category,sort,maxPrice,inStockOnly" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
         @forelse ($products as $product)
             <div class="group rounded-3xl bg-white p-4 border border-rose/10 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between" wire:key="product-{{ $product->id }}">
                 
